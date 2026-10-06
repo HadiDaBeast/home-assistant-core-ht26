@@ -127,7 +127,8 @@ async def async_add_user_device_tracker(
 
         await coll.async_update_item(
             person[CONF_ID],
-            {CONF_DEVICE_TRACKERS: [*device_trackers, device_tracker_entity_id]},
+            {CONF_DEVICE_TRACKERS: [
+                *device_trackers, device_tracker_entity_id]},
         )
         break
 
@@ -224,7 +225,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
         data = await super()._async_load_data()
 
         if data is None:
-            return data
+            return None
 
         for person in data["items"]:
             if person[CONF_DEVICE_TRACKERS] is None:
@@ -482,7 +483,8 @@ class Person(
                 gps_accuracy=state.attributes.get(
                     PersonEntityStateAttribute.GPS_ACCURACY
                 ),
-                in_zones=state.attributes.get(PersonEntityStateAttribute.IN_ZONES),
+                in_zones=state.attributes.get(
+                    PersonEntityStateAttribute.IN_ZONES),
             )
 
         if self.hass.is_running:
@@ -518,7 +520,8 @@ class Person(
             self._unsub_track_device = None
 
         if trackers := self._config[CONF_DEVICE_TRACKERS]:
-            _LOGGER.debug("Subscribe to device trackers for %s", self.entity_id)
+            _LOGGER.debug("Subscribe to device trackers for %s",
+                          self.entity_id)
 
             self._unsub_track_device = async_track_state_change_event(
                 self.hass, trackers, self._async_handle_tracker_update
@@ -548,7 +551,8 @@ class Person(
             ):
                 latest_connected = _get_latest(latest_connected, state)
             elif (
-                state.attributes.get(DeviceTrackerEntityStateAttribute.SOURCE_TYPE)
+                state.attributes.get(
+                    DeviceTrackerEntityStateAttribute.SOURCE_TYPE)
                 == SourceType.GPS
             ):
                 latest_gps = _get_latest(latest_gps, state)
@@ -567,7 +571,8 @@ class Person(
             self._parse_source_state(
                 latest,
                 latitude=latest.attributes.get(EntityStateAttribute.LATITUDE),
-                longitude=latest.attributes.get(EntityStateAttribute.LONGITUDE),
+                longitude=latest.attributes.get(
+                    EntityStateAttribute.LONGITUDE),
                 gps_accuracy=latest.attributes.get(
                     TrackerEntityStateAttribute.GPS_ACCURACY
                 ),
@@ -623,7 +628,8 @@ class Person(
         ):
             self._in_zones = [ENTITY_ID_HOME]
             if self._latitude is None and self._longitude is None:
-                self._latitude = home_zone.attributes.get(EntityStateAttribute.LATITUDE)
+                self._latitude = home_zone.attributes.get(
+                    EntityStateAttribute.LATITUDE)
                 self._longitude = home_zone.attributes.get(
                     EntityStateAttribute.LONGITUDE
                 )
