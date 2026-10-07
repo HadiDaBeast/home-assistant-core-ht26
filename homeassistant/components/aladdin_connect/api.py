@@ -1,5 +1,4 @@
-"""API for Aladdin Connect Genie bound to Home Assistant OAuth."""
-
+import os
 from typing import cast, override
 
 from aiohttp import ClientSession
@@ -7,7 +6,9 @@ from genie_partner_sdk.auth import Auth
 
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from const import API_KEY, API_URL
+from .const import API_URL
+
+API_KEY = os.environ.get("ALADDIN_API_KEY")
 
 
 class AsyncConfigFlowAuth(Auth):
