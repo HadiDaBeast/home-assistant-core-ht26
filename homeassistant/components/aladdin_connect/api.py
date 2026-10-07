@@ -8,15 +8,18 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import API_URL
 
-API_KEY = os.environ.get("ALADDIN_API_KEY")
-
 
 class AsyncConfigFlowAuth(Auth):
     """Provide Aladdin Connect Genie authentication for config flow validation."""
 
     def __init__(self, websession: ClientSession, access_token: str) -> None:
         """Initialize Aladdin Connect Genie auth."""
-        super().__init__(websession, API_URL, access_token, API_KEY)
+        super().__init__(
+            websession,
+            API_URL,
+            access_token,
+            os.environ.get("ALADDIN_API_KEY"),
+        )
 
     @override
     async def async_get_access_token(self) -> str:
@@ -34,7 +37,10 @@ class AsyncConfigEntryAuth(Auth):
     ) -> None:
         """Initialize Aladdin Connect Genie auth."""
         super().__init__(
-            websession, API_URL, oauth_session.token["access_token"], API_KEY
+            websession,
+            API_URL,
+            oauth_session.token["access_token"],
+            os.environ.get("ALADDIN_API_KEY"),
         )
         self._oauth_session = oauth_session
 
