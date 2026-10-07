@@ -224,7 +224,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
         data = await super()._async_load_data()
 
         if data is None:
-            return data
+            return None
 
         for person in data["items"]:
             if person[CONF_DEVICE_TRACKERS] is None:
