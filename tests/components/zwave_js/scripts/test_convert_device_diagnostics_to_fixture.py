@@ -11,8 +11,8 @@ import pytest
 from homeassistant.components.zwave_js.scripts.convert_device_diagnostics_to_fixture import (
     extract_fixture_data,
     get_fixtures_dir_path,
-    load_file,
     main,
+    path_sanitization,
 )
 
 from tests.common import load_fixture, load_json_object_fixture
@@ -50,11 +50,31 @@ def test_fixture_functions() -> None:
         extract_fixture_data({})
 
 
-def test_load_file() -> None:
-    """Test load file."""
-    assert load_file(
-        Path(__file__).parents[1] / "fixtures" / "device_diagnostics.json"
-    ) == load_json_object_fixture("zwave_js/device_diagnostics.json")
+def test_null_bytes_in_path() -> None:
+    """Test path for null bytes."""
+    invalid_path = Path(__file__).parents[1] / "diagnostics\x00.json"
+    with pytest.raises(ValueError, match="Null byte in path"):
+        path_sanitization(invalid_path)
+
+
+def test_path_sanitation() -> None:
+    """Test path sanitation."""
+    valid_path = Path(__file__).parents[1] / "fixtures" / "device_diagnostics.json"
+    sanitized_path = path_sanitization(valid_path)
+    assert valid_path == sanitized_path
+
+
+def test_path_invalid_filetype() -> None:
+    """Test invalid path sanitization with nonexisting files and unexpected filetype."""
+    invaild_path_non_json = Path(__file__).parents[1] / "__init__.py"
+    invalid_path_dir = Path(__file__).parents[1]
+    invaild_path_non_existant = Path("invalid.json")
+    with pytest.raises(ValueError):
+        path_sanitization(invaild_path_non_json)
+    with pytest.raises(ValueError):
+        path_sanitization(invalid_path_dir)
+    with pytest.raises(ValueError):
+        path_sanitization(invaild_path_non_existant)
 
 
 def test_main(capfd: pytest.CaptureFixture[str]) -> None:
