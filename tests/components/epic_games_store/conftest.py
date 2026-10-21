@@ -11,16 +11,6 @@ from .const import (
 )
 
 
-@pytest.fixture(autouse=True)
-def mock_wishlist_service():
-    """Mock the wishlist product mapping API."""
-    with patch(
-        "homeassistant.components.epic_games_store.coordinator.EpicGamesStoreAPI.get_product_mapping",
-        return_value={},
-    ):
-        yield
-
-
 @pytest.fixture(name="service_multiple")
 def mock_service_multiple():
     """Mock a successful service with multiple free & discount games."""
@@ -29,6 +19,9 @@ def mock_service_multiple():
     ) as service_mock:
         instance = service_mock.return_value
         instance.get_free_games = Mock(return_value=DATA_FREE_GAMES)
+        instance.fetch_store_games.return_value = {
+            "data": {"Catalog": {"searchStore": {"elements": []}}}
+        }
         yield service_mock
 
 
@@ -40,6 +33,9 @@ def mock_service_christmas_special():
     ) as service_mock:
         instance = service_mock.return_value
         instance.get_free_games = Mock(return_value=DATA_FREE_GAMES_CHRISTMAS_SPECIAL)
+        instance.fetch_store_games.return_value = {
+            "data": {"Catalog": {"searchStore": {"elements": []}}}
+        }
         yield service_mock
 
 
@@ -51,4 +47,7 @@ def mock_service_attribute_not_found():
     ) as service_mock:
         instance = service_mock.return_value
         instance.get_free_games = Mock(return_value=DATA_ERROR_ATTRIBUTE_NOT_FOUND)
+        instance.fetch_store_games.return_value = {
+            "data": {"Catalog": {"searchStore": {"elements": []}}}
+        }
         yield service_mock

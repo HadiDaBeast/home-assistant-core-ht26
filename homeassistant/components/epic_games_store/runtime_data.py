@@ -12,7 +12,7 @@ class EGSRuntimeData:
     """Data stored on the Epic Games Store config entry."""
 
     calendar: DataUpdateCoordinator[dict[str, list[dict[str, Any]]]]
-    wishlist: DataUpdateCoordinator[dict[str, str]]
+    wishlist: DataUpdateCoordinator[list[dict[str, str]]]
 
 
 type EGSConfigEntry = ConfigEntry[EGSRuntimeData]

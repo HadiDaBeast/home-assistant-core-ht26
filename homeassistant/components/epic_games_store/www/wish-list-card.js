@@ -456,8 +456,7 @@ function openWishlistDialog(hass, entityId) {
 
   </style>
 `;
-  // TODO: Replace mock data with a search of the Epic Games Store
-  let catalog = [];
+  const catalog = stateObj?.attributes.catalog ?? [];
 
   // Fetch stored games
   // TODO: Replace mock data with the stored wishlist
