@@ -1,4 +1,4 @@
-"""To-do platform for the Epic Games Store wish list."""
+"""To-do entity for the EGSWishList."""
 
 from typing import override
 
@@ -20,7 +20,7 @@ async def async_setup_entry(
     entry: EGSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the wish list to-do list."""
+    """Set up the wishlist to-do list."""
     async_add_entities(
         [EGSWishListTodo(entry.runtime_data.wish_list, entry.entry_id, "wish_list")]
     )
@@ -29,7 +29,7 @@ async def async_setup_entry(
 class EGSWishListTodo(EGSWishListEntity, TodoListEntity):
     """The games on the wish list."""
 
-    # Games are added through the select entity, which only offers catalog games
+    # Set only accepted options for the todo list to be Update and Delete
     _attr_supported_features = (
         TodoListEntityFeature.UPDATE_TODO_ITEM | TodoListEntityFeature.DELETE_TODO_ITEM
     )
@@ -53,7 +53,7 @@ class EGSWishListTodo(EGSWishListEntity, TodoListEntity):
 
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Tick a game off the wish list; titles come from the catalog."""
+        """Set game as complete or not."""
         assert item.uid
         await self._wish_list.async_set_completed(
             item.uid, item.status == TodoItemStatus.COMPLETED

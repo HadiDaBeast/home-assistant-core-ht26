@@ -1,4 +1,4 @@
-"""Base entity for the Epic Games Store wish list."""
+"""Entity for the todo list EGSWishList."""
 
 from typing import override
 
@@ -10,7 +10,7 @@ from .wish_list import EGSWishList
 
 
 class EGSWishListEntity(Entity):
-    """An entity backed by the Epic Games Store wish list."""
+    """EGSWishListEntity that is shown in hass areas."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False

@@ -11,15 +11,13 @@ STORAGE_VERSION = 1
 
 
 class Game(TypedDict):
-    """A game from the Epic Games Store catalog."""
+    """A game object from the Epic Games Store catalog."""
 
     id: str
     title: str
-    # Ticked off on the wish list, e.g. after buying it
     completed: NotRequired[bool]
 
 
-# Placeholder until the games are fetched from the Epic Games Store catalog
 CATALOG: list[Game] = [
     {"id": "hades-ii", "title": "Hades II"},
     {"id": "alan-wake-2", "title": "Alan Wake 2"},
@@ -53,7 +51,7 @@ async def async_remove_wish_list(hass: HomeAssistant, entry_id: str) -> None:
 
 
 class EGSWishList:
-    """Games on the wish list, shared by the wish list entities."""
+    """EGS Wishlist for storing, adding and removing games."""
 
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
         """Initialize."""
@@ -76,11 +74,11 @@ class EGSWishList:
         self.games.append(game)
         await self._async_save()
 
-    async def async_set_completed(self, game_id: str, completed: bool) -> None:
-        """Tick a game off the wish list, or untick it."""
+    async def async_set_completed(self, game_id: str, state: bool) -> None:
+        """Set wishlisted game as completed or not."""
         for game in self.games:
             if game["id"] == game_id:
-                game["completed"] = completed
+                game["completed"] = state
         await self._async_save()
 
     async def async_remove(self, game_ids: set[str]) -> None:

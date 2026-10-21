@@ -1,4 +1,4 @@
-"""Select platform for adding games to the Epic Games Store wish list."""
+"""Select entity for adding Games to the EGSWishList."""
 
 from typing import override
 

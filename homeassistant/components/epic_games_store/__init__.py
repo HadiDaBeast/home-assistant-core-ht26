@@ -19,6 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EGSConfigEntry) -> bool:
     coordinator = EGSCalendarUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
+    # Create / Setup wishlist entity
     wish_list = EGSWishList(hass, entry.entry_id)
     await wish_list.async_load()
 
