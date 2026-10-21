@@ -10,7 +10,7 @@ from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CATALOG_KEY, DOMAIN, CalendarType
+from .const import DOMAIN, CalendarType
 from .helper import format_game_data
 from .runtime_data import EGSConfigEntry
 
@@ -41,22 +41,11 @@ class EGSCalendarUpdateCoordinator(
             update_interval=SCAN_INTERVAL,
         )
 
-    def _fetch_data(self) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-        """Fetch both the free games feed and the full catalog."""
-        return self._api.get_free_games(), self._api.fetch_store_games(
-            count=30,
-            start=0,
-            allow_countries=self.country,
-        )
-
     @override
     async def _async_update_data(self) -> dict[str, list[dict[str, Any]]]:
         """Update data via library."""
-        raw_data, catalog_data = await self.hass.async_add_executor_job(
-            self._fetch_data
-        )
+        raw_data = await self.hass.async_add_executor_job(self._api.get_free_games)
 
-        _LOGGER.debug("CATALOG DATA: %s", catalog_data)
         data = raw_data["data"]["Catalog"]["searchStore"]["elements"]
 
         discount_games = filter(
@@ -76,7 +65,6 @@ class EGSCalendarUpdateCoordinator(
         return_data: dict[str, list[dict[str, Any]]] = {
             CalendarType.DISCOUNT: [],
             CalendarType.FREE: [],
-            CATALOG_KEY: catalog_data,
         }
         for discount_game in discount_games:
             game = format_game_data(discount_game, self.language)
@@ -105,6 +93,8 @@ class EGSWishlistUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             entry.data[CONF_LANGUAGE],
             entry.data[CONF_COUNTRY],
         )
+        self.language = entry.data[CONF_LANGUAGE]
+        self.country = entry.data[CONF_COUNTRY]
 
         super().__init__(
             hass,
@@ -114,7 +104,18 @@ class EGSWishlistUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             update_interval=SCAN_INTERVAL,
         )
 
+    def _fetch_data(self) -> dict[str, Any]:
+        """Fetch both the free games feed and the full catalog."""
+        return self._api.fetch_store_games(
+            count=30,
+            start=0,
+            allow_countries=self.country,
+        )
+
     @override
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch the product mapping from the library."""
-        return await self.hass.async_add_executor_job(self._api.get_product_mapping)
+        catalog_data = await self.hass.async_add_executor_job(self._fetch_data)
+        catalog_data = catalog_data["data"]["Catalog"]["searchStore"]["elements"]
+        _LOGGER.debug(catalog_data)
+        return catalog_data
