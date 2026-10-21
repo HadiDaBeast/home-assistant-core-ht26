@@ -8,10 +8,13 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN, CalendarType
-from .coordinator import EGSCalendarUpdateCoordinator, EGSConfigEntry
+from .runtime_data import EGSConfigEntry
 
 DateRange = namedtuple("DateRange", ["start", "end"])  # noqa: PYI024
 
@@ -22,7 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the local calendar platform."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.calendar
 
     entities = [
         EGSCalendar(coordinator, entry.entry_id, CalendarType.FREE),
@@ -31,14 +34,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class EGSCalendar(CoordinatorEntity[EGSCalendarUpdateCoordinator], CalendarEntity):
+class EGSCalendar(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, list[dict[str, Any]]]]],
+    CalendarEntity,
+):
     """A calendar entity by Epic Games Store."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: EGSCalendarUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, list[dict[str, Any]]]],
         config_entry_id: str,
         cal_type: CalendarType,
     ) -> None:
