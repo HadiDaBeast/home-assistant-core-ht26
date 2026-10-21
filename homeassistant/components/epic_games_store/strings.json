@@ -33,6 +33,11 @@
           }
         }
       }
+    },
+    "sensor": {
+      "wish_list": {
+        "name": "Wish List"
+      }
     }
   }
 }
