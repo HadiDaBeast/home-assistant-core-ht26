@@ -962,7 +962,7 @@ env-canada==0.19.0
 ephem==4.1.6
 
 # homeassistant.components.epic_games_store
-epicstore-api==0.1.9
+epicstore-api==0.2.0
 
 # homeassistant.components.epion
 epion==0.0.3
