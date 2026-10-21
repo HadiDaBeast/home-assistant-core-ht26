@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the local calendar platform."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
 
     entities = [
         EGSCalendar(coordinator, entry.entry_id, CalendarType.FREE),

@@ -1,5 +1,6 @@
 """The Epic Games Store integration data coordinator."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, override
@@ -13,12 +14,21 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, CalendarType
 from .helper import format_game_data
+from .wish_list import EGSWishList
 
 SCAN_INTERVAL = timedelta(days=1)
 
 _LOGGER = logging.getLogger(__name__)
 
-type EGSConfigEntry = ConfigEntry[EGSCalendarUpdateCoordinator]
+type EGSConfigEntry = ConfigEntry[EGSData]
+
+
+@dataclass
+class EGSData:
+    """Runtime data of an Epic Games Store config entry."""
+
+    coordinator: EGSCalendarUpdateCoordinator
+    wish_list: EGSWishList
 
 
 class EGSCalendarUpdateCoordinator(

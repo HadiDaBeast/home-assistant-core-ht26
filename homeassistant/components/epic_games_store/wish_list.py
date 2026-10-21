@@ -1,0 +1,106 @@
+"""Wish list storage for the Epic Games Store integration."""
+
+from typing import NotRequired, TypedDict
+
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.storage import Store
+
+from .const import DOMAIN
+
+STORAGE_VERSION = 1
+
+
+class Game(TypedDict):
+    """A game from the Epic Games Store catalog."""
+
+    id: str
+    title: str
+    # Ticked off on the wish list, e.g. after buying it
+    completed: NotRequired[bool]
+
+
+# Placeholder until the games are fetched from the Epic Games Store catalog
+CATALOG: list[Game] = [
+    {"id": "hades-ii", "title": "Hades II"},
+    {"id": "alan-wake-2", "title": "Alan Wake 2"},
+    {"id": "hollow-knight-silksong", "title": "Hollow Knight: Silksong"},
+    {"id": "satisfactory", "title": "Satisfactory"},
+    {"id": "kingdom-come-deliverance-ii", "title": "Kingdom Come: Deliverance II"},
+    {"id": "fortnite", "title": "Fortnite"},
+    {"id": "rocket-league", "title": "Rocket League"},
+    {"id": "fall-guys", "title": "Fall Guys"},
+    {"id": "death-stranding", "title": "Death Stranding"},
+    {"id": "control", "title": "Control"},
+    {"id": "red-dead-redemption-2", "title": "Red Dead Redemption 2"},
+    {"id": "cyberpunk-2077", "title": "Cyberpunk 2077"},
+    {"id": "the-witcher-3", "title": "The Witcher 3: Wild Hunt"},
+    {"id": "hades", "title": "Hades"},
+    {"id": "hogwarts-legacy", "title": "Hogwarts Legacy"},
+    {"id": "baldurs-gate-3", "title": "Baldur's Gate 3"},
+    {"id": "stardew-valley", "title": "Stardew Valley"},
+    {"id": "celeste", "title": "Celeste"},
+]
+
+
+def _store(hass: HomeAssistant, entry_id: str) -> Store[list[Game]]:
+    """Return the store holding the wish list of a config entry."""
+    return Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}")
+
+
+async def async_remove_wish_list(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove the stored wish list of a config entry."""
+    await _store(hass, entry_id).async_remove()
+
+
+class EGSWishList:
+    """Games on the wish list, shared by the wish list entities."""
+
+    def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
+        """Initialize."""
+        self._store = _store(hass, entry_id)
+        self._listeners: list[CALLBACK_TYPE] = []
+        self.games: list[Game] = []
+
+    async def async_load(self) -> None:
+        """Load the stored wish list."""
+        self.games = await self._store.async_load() or []
+
+    @property
+    def available_games(self) -> list[Game]:
+        """Return the catalog games that are not on the wish list yet."""
+        wishlisted = {game["id"] for game in self.games}
+        return [game for game in CATALOG if game["id"] not in wishlisted]
+
+    async def async_add(self, game: Game) -> None:
+        """Add a game to the wish list."""
+        self.games.append(game)
+        await self._async_save()
+
+    async def async_set_completed(self, game_id: str, completed: bool) -> None:
+        """Tick a game off the wish list, or untick it."""
+        for game in self.games:
+            if game["id"] == game_id:
+                game["completed"] = completed
+        await self._async_save()
+
+    async def async_remove(self, game_ids: set[str]) -> None:
+        """Remove games from the wish list."""
+        self.games = [game for game in self.games if game["id"] not in game_ids]
+        await self._async_save()
+
+    async def _async_save(self) -> None:
+        """Store the wish list and notify the entities."""
+        await self._store.async_save(self.games)
+        for update_callback in self._listeners:
+            update_callback()
+
+    @callback
+    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Listen for wish list changes."""
+        self._listeners.append(update_callback)
+
+        @callback
+        def remove_listener() -> None:
+            self._listeners.remove(update_callback)
+
+        return remove_listener
