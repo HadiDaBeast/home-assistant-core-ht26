@@ -4,6 +4,8 @@ from enum import StrEnum
 
 DOMAIN = "epic_games_store"
 
+CATALOG_KEY = "catalog"
+
 SUPPORTED_LANGUAGES = [
     "ar",
     "de",
