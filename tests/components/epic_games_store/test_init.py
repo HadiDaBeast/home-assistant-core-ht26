@@ -33,15 +33,17 @@ async def test_wishlist_with_listener_refreshes_once_per_scan_interval(
     are placed outside that window to keep the test repeatable.
     """
     # Arrange
-    get_product_mapping = service_multiple.return_value.get_product_mapping
-    get_product_mapping.return_value = {}
+    fetch_store_games = service_multiple.return_value.fetch_store_games
+    fetch_store_games.return_value = {
+        "data": {"Catalog": {"searchStore": {"elements": []}}}
+    }
     entry = await setup_platform(hass, CALENDAR_DOMAIN)
     entry.async_on_unload(entry.runtime_data.wishlist.async_add_listener(lambda: None))
 
     # Act + Assert: OFF point
     await _tick(hass, freezer, SCAN_INTERVAL - timedelta(seconds=2))
-    assert get_product_mapping.call_count == 1
+    assert fetch_store_games.call_count == 1
 
     # Act + Assert: ON point
     await _tick(hass, freezer, timedelta(seconds=3))
-    assert get_product_mapping.call_count == 2
+    assert fetch_store_games.call_count == 2

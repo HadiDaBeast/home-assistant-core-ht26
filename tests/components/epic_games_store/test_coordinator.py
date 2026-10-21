@@ -2,8 +2,7 @@
 
 SUT: EGSWishlistUpdateCoordinator. The Epic Games Store API is replaced by a
 stub (pre-recorded answers); where the interaction itself is asserted, the
-same double is used as a mock. Many games are covered by
-test_wishlist_coordinator.py.
+same double is used as a mock.
 """
 
 from unittest.mock import Mock
@@ -20,6 +19,11 @@ from homeassistant.core import HomeAssistant
 from .const import MOCK_COUNTRY, MOCK_LANGUAGE
 
 from tests.common import MockConfigEntry
+
+
+def _store_response(elements: list[dict[str, str]]) -> dict:
+    """Wrap catalog elements the way fetch_store_games returns them."""
+    return {"data": {"Catalog": {"searchStore": {"elements": elements}}}}
 
 
 def _create_coordinator(hass: HomeAssistant) -> EGSWishlistUpdateCoordinator:
@@ -43,24 +47,44 @@ async def test_api_created_with_entry_language_and_country(
     service_multiple.assert_called_once_with(MOCK_LANGUAGE, MOCK_COUNTRY)
 
 
-@pytest.mark.parametrize(
-    "product_mapping",
-    [
-        {},
-        {"namespace-1": "game-slug-1"},
-    ],
-    ids=["zero_games", "one_game"],
-)
-async def test_refresh_stores_product_mapping(
-    hass: HomeAssistant, service_multiple: Mock, product_mapping: dict[str, str]
+async def test_refresh_fetches_store_games_for_entry_country(
+    hass: HomeAssistant, service_multiple: Mock
 ) -> None:
-    """Test the product mapping from the API is stored unchanged, for 0 and 1 games."""
+    """Test the catalog is fetched for the country of the entry."""
     # Arrange
-    service_multiple.return_value.get_product_mapping.return_value = product_mapping
+    fetch_store_games = service_multiple.return_value.fetch_store_games
+    fetch_store_games.return_value = _store_response([])
     coordinator = _create_coordinator(hass)
 
     # Act
     await coordinator.async_refresh()
 
     # Assert
-    assert coordinator.data == product_mapping
+    fetch_store_games.assert_called_once_with(
+        count=30, start=0, allow_countries=MOCK_COUNTRY
+    )
+
+
+@pytest.mark.parametrize(
+    "elements",
+    [
+        [],
+        [{"title": "Game 1", "productSlug": "game-1"}],
+    ],
+    ids=["zero_games", "one_game"],
+)
+async def test_refresh_stores_catalog_elements(
+    hass: HomeAssistant, service_multiple: Mock, elements: list[dict[str, str]]
+) -> None:
+    """Test the catalog elements are extracted from the response, for 0 and 1 games."""
+    # Arrange
+    service_multiple.return_value.fetch_store_games.return_value = _store_response(
+        elements
+    )
+    coordinator = _create_coordinator(hass)
+
+    # Act
+    await coordinator.async_refresh()
+
+    # Assert
+    assert coordinator.data == elements
