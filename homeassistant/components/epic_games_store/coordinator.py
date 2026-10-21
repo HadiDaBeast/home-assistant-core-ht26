@@ -95,6 +95,7 @@ class EGSWishlistUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         )
         self.language = entry.data[CONF_LANGUAGE]
         self.country = entry.data[CONF_COUNTRY]
+        self.data = []
 
         super().__init__(
             hass,
@@ -118,4 +119,7 @@ class EGSWishlistUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         catalog_data = await self.hass.async_add_executor_job(self._fetch_data)
         catalog_data = catalog_data["data"]["Catalog"]["searchStore"]["elements"]
         _LOGGER.debug(catalog_data)
+
+        self.data = catalog_data
+
         return catalog_data

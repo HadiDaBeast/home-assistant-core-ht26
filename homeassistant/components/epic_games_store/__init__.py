@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EGSConfigEntry) -> bool:
 
     await calendar_coordinator.async_config_entry_first_refresh()
     await wishlist_coordinator.async_config_entry_first_refresh()
-    wish_list = EGSWishList(hass, entry.entry_id)
+    wish_list = EGSWishList(hass, entry.entry_id, wishlist_coordinator)
 
     entry.runtime_data = EGSRuntimeData(
         calendar=calendar_coordinator,

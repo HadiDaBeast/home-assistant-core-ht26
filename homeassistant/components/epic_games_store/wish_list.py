@@ -5,6 +5,9 @@ from typing import NotRequired, TypedDict
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
+# from homeassistant.components.epic_games_store import coordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
 from .const import DOMAIN
 
 STORAGE_VERSION = 1
@@ -16,28 +19,6 @@ class Game(TypedDict):
     id: str
     title: str
     completed: NotRequired[bool]
-
-
-CATALOG: list[Game] = [
-    {"id": "hades-ii", "title": "Hades II"},
-    {"id": "alan-wake-2", "title": "Alan Wake 2"},
-    {"id": "hollow-knight-silksong", "title": "Hollow Knight: Silksong"},
-    {"id": "satisfactory", "title": "Satisfactory"},
-    {"id": "kingdom-come-deliverance-ii", "title": "Kingdom Come: Deliverance II"},
-    {"id": "fortnite", "title": "Fortnite"},
-    {"id": "rocket-league", "title": "Rocket League"},
-    {"id": "fall-guys", "title": "Fall Guys"},
-    {"id": "death-stranding", "title": "Death Stranding"},
-    {"id": "control", "title": "Control"},
-    {"id": "red-dead-redemption-2", "title": "Red Dead Redemption 2"},
-    {"id": "cyberpunk-2077", "title": "Cyberpunk 2077"},
-    {"id": "the-witcher-3", "title": "The Witcher 3: Wild Hunt"},
-    {"id": "hades", "title": "Hades"},
-    {"id": "hogwarts-legacy", "title": "Hogwarts Legacy"},
-    {"id": "baldurs-gate-3", "title": "Baldur's Gate 3"},
-    {"id": "stardew-valley", "title": "Stardew Valley"},
-    {"id": "celeste", "title": "Celeste"},
-]
 
 
 def _store(hass: HomeAssistant, entry_id: str) -> Store[list[Game]]:
@@ -53,11 +34,14 @@ async def async_remove_wish_list(hass: HomeAssistant, entry_id: str) -> None:
 class EGSWishList:
     """EGS Wishlist for storing, adding and removing games."""
 
-    def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry_id: str, coordinator: DataUpdateCoordinator
+    ) -> None:
         """Initialize."""
         self._store = _store(hass, entry_id)
         self._listeners: list[CALLBACK_TYPE] = []
         self.games: list[Game] = []
+        self.catalog: list[dict[str, str]] = coordinator.data
 
     async def async_load(self) -> None:
         """Load the stored wish list."""
@@ -67,7 +51,7 @@ class EGSWishList:
     def available_games(self) -> list[Game]:
         """Return the catalog games that are not on the wish list yet."""
         wishlisted = {game["id"] for game in self.games}
-        return [game for game in CATALOG if game["id"] not in wishlisted]
+        return [game for game in self.catalog if game["id"] not in wishlisted]
 
     async def async_add(self, game: Game) -> None:
         """Add a game to the wish list."""
