@@ -11,13 +11,15 @@ from .common import setup_platform
 async def test_setup_wishlist_coordinator(
     hass: HomeAssistant, service_multiple: Mock
 ) -> None:
-    """Test the wishlist coordinator fetches and stores the product mapping."""
-    product_mapping = {
-        "product-namespace-1": "game-slug-1",
-        "product-namespace-2": "game-slug-2",
+    """Test the wishlist coordinator fetches and stores the catalog."""
+    catalog = [
+        {"id": "game-id-1", "title": "Game One"},
+        {"id": "game-id-2", "title": "Game Two"},
+    ]
+    service_multiple.return_value.fetch_store_games.return_value = {
+        "data": {"Catalog": {"searchStore": {"elements": catalog}}}
     }
-    service_multiple.return_value.get_product_mapping.return_value = product_mapping
     entry = await setup_platform(hass, CALENDAR_DOMAIN)
 
-    service_multiple.return_value.get_product_mapping.assert_called_once()
-    assert entry.runtime_data.wishlist.data == product_mapping
+    service_multiple.return_value.fetch_store_games.assert_called_once()
+    assert entry.runtime_data.wishlist.data == catalog
