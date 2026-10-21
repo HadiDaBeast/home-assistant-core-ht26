@@ -6,6 +6,8 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .wish_list import EGSWishList
+
 
 @dataclass
 class EGSRuntimeData:
@@ -13,6 +15,7 @@ class EGSRuntimeData:
 
     calendar: DataUpdateCoordinator[dict[str, list[dict[str, Any]]]]
     wishlist: DataUpdateCoordinator[dict[str, str]]
+    wish_list: EGSWishList
 
 
 type EGSConfigEntry = ConfigEntry[EGSRuntimeData]
