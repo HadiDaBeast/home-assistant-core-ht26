@@ -6,19 +6,17 @@ from typing import Any, override
 
 from epicstore_api import EpicGamesStoreAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CATALOG_KEY, DOMAIN, CalendarType
 from .helper import format_game_data
+from .runtime_data import EGSConfigEntry
 
 SCAN_INTERVAL = timedelta(days=1)
 
 _LOGGER = logging.getLogger(__name__)
-
-type EGSConfigEntry = ConfigEntry[EGSCalendarUpdateCoordinator]
 
 
 class EGSCalendarUpdateCoordinator(
@@ -96,3 +94,27 @@ class EGSCalendarUpdateCoordinator(
 
         _LOGGER.debug(return_data)
         return return_data
+
+
+class EGSWishlistUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
+    """Class to manage fetching wishlist product mappings from Epic Games Store."""
+
+    def __init__(self, hass: HomeAssistant, entry: EGSConfigEntry) -> None:
+        """Initialize."""
+        self._api = EpicGamesStoreAPI(
+            entry.data[CONF_LANGUAGE],
+            entry.data[CONF_COUNTRY],
+        )
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN} wishlist",
+            update_interval=SCAN_INTERVAL,
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, str]:
+        """Fetch the product mapping from the library."""
+        return await self.hass.async_add_executor_job(self._api.get_product_mapping)
