@@ -14,11 +14,14 @@ PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: EGSConfigEntry) -> bool:
     """Set up Epic Games Store from a config entry."""
+
+    # Add new wish list custom card
     card = Path(__file__).parent / "www" / "wish-list-card.js"
     await hass.http.async_register_static_paths(
-        [StaticPathConfig("/epic_games_store/wish-list-card.js", str(card), True)]
+        [StaticPathConfig("/epic_games_store/wish-list-card.js", str(card), False)]
     )
     add_extra_js_url(hass, "/epic_games_store/wish-list-card.js")
+
     coordinator = EGSCalendarUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
