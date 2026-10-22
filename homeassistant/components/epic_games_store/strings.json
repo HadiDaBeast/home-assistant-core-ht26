@@ -33,6 +33,16 @@
           }
         }
       }
+    },
+    "select": {
+      "add_to_wish_list": {
+        "name": "Add to wish list"
+      }
+    },
+    "todo": {
+      "wish_list": {
+        "name": "Wish list"
+      }
     }
   }
 }
