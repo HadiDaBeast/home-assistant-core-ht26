@@ -35,13 +35,19 @@ class EGSWishList:
     """EGS Wishlist for storing, adding and removing games."""
 
     def __init__(
-        self, hass: HomeAssistant, entry_id: str, coordinator: DataUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        entry_id: str,
+        coordinator: DataUpdateCoordinator[list[dict[str, str]]],
     ) -> None:
         """Initialize."""
         self._store = _store(hass, entry_id)
         self._listeners: list[CALLBACK_TYPE] = []
         self.games: list[Game] = []
-        self.catalog: list[dict[str, str]] = coordinator.data
+        self.catalog: list[Game] = [
+            Game(id=game["id"], title=game["title"])
+            for game in sorted(coordinator.data, key=lambda game: game["title"])
+        ]
 
     async def async_load(self) -> None:
         """Load the stored wish list."""

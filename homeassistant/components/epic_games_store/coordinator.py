@@ -84,7 +84,7 @@ class EGSCalendarUpdateCoordinator(
         return return_data
 
 
-class EGSWishlistUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
+class EGSWishlistUpdateCoordinator(DataUpdateCoordinator[list[dict[str, str]]]):
     """Class to manage fetching wishlist product mappings from Epic Games Store."""
 
     def __init__(self, hass: HomeAssistant, entry: EGSConfigEntry) -> None:
@@ -105,21 +105,12 @@ class EGSWishlistUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             update_interval=SCAN_INTERVAL,
         )
 
-    def _fetch_data(self) -> dict[str, Any]:
-        """Fetch both the free games feed and the full catalog."""
-        return self._api.fetch_store_games(
-            count=30,
-            start=0,
-            allow_countries=self.country,
-        )
-
     @override
-    async def _async_update_data(self) -> dict[str, str]:
+    async def _async_update_data(self) -> list[dict[str, str]]:
         """Fetch the product mapping from the library."""
-        catalog_data = await self.hass.async_add_executor_job(self._fetch_data)
-        catalog_data = catalog_data["data"]["Catalog"]["searchStore"]["elements"]
-        _LOGGER.debug(catalog_data)
-
-        self.data = catalog_data
-
-        return catalog_data
+        catalog_data = await self.hass.async_add_executor_job(
+            self._api.get_product_mapping
+        )
+        self.data = [{"id": item, "title": catalog_data[item]} for item in catalog_data]
+        _LOGGER.debug(self.data)
+        return self.data
