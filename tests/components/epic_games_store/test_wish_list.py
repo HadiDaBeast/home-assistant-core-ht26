@@ -114,7 +114,7 @@ async def test_catalog_fetch_failure_retries_setup(
 ) -> None:
     """Test setup is retried, without entities, when the first catalog fetch fails."""
     # Arrange
-    service_multiple.return_value.fetch_store_games.side_effect = Exception
+    service_multiple.return_value.get_product_mapping.side_effect = Exception
 
     # Act
     entry = MockConfigEntry(

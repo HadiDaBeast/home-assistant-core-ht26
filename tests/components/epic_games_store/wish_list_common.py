@@ -21,9 +21,9 @@ GAME_B = {"id": "game-b", "title": "Game B"}
 CATALOG = [GAME_A, GAME_B]
 
 
-def store_response(games: list[dict[str, str]]) -> dict[str, Any]:
-    """Wrap catalog games the way fetch_store_games returns them."""
-    return {"data": {"Catalog": {"searchStore": {"elements": games}}}}
+def product_mapping(games: list[dict[str, str]]) -> dict[str, str]:
+    """Return catalog games the way get_product_mapping returns them."""
+    return {game["id"]: game["title"] for game in games}
 
 
 def stored_wish_list(games: list[dict[str, Any]]) -> dict[str, Any]:
@@ -41,7 +41,7 @@ async def setup_wish_list(
     """Set up a config entry with all its platforms and the given catalog."""
     if catalog is None:
         catalog = CATALOG
-    service.return_value.fetch_store_games.return_value = store_response(catalog)
+    service.return_value.get_product_mapping.return_value = product_mapping(catalog)
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id=entry_id,
