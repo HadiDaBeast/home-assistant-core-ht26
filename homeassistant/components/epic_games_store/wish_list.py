@@ -44,14 +44,19 @@ class EGSWishList:
         self._store = _store(hass, entry_id)
         self._listeners: list[CALLBACK_TYPE] = []
         self.games: list[Game] = []
-        self.catalog: list[Game] = [
-            Game(id=game["id"], title=game["title"])
-            for game in sorted(coordinator.data, key=lambda game: game["title"])
-        ]
+        self.coordinator = coordinator
 
     async def async_load(self) -> None:
         """Load the stored wish list."""
         self.games = await self._store.async_load() or []
+
+    @property
+    def catalog(self) -> list[Game]:
+        """Return the catalog games from the latest coordinator refresh."""
+        return [
+            Game(id=game["id"], title=game["title"])
+            for game in sorted(self.coordinator.data, key=lambda game: game["title"])
+        ]
 
     @property
     def available_games(self) -> list[Game]:
