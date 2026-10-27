@@ -6,19 +6,17 @@ from typing import Any, override
 
 from epicstore_api import EpicGamesStoreAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, CalendarType
 from .helper import format_game_data
+from .runtime_data import EGSConfigEntry
 
 SCAN_INTERVAL = timedelta(days=1)
 
 _LOGGER = logging.getLogger(__name__)
-
-type EGSConfigEntry = ConfigEntry[EGSCalendarUpdateCoordinator]
 
 
 class EGSCalendarUpdateCoordinator(
@@ -33,6 +31,7 @@ class EGSCalendarUpdateCoordinator(
             entry.data[CONF_COUNTRY],
         )
         self.language = entry.data[CONF_LANGUAGE]
+        self.country = entry.data[CONF_COUNTRY]
 
         super().__init__(
             hass,
@@ -46,7 +45,7 @@ class EGSCalendarUpdateCoordinator(
     async def _async_update_data(self) -> dict[str, list[dict[str, Any]]]:
         """Update data via library."""
         raw_data = await self.hass.async_add_executor_job(self._api.get_free_games)
-        _LOGGER.debug(raw_data)
+
         data = raw_data["data"]["Catalog"]["searchStore"]["elements"]
 
         discount_games = filter(
@@ -83,3 +82,35 @@ class EGSCalendarUpdateCoordinator(
 
         _LOGGER.debug(return_data)
         return return_data
+
+
+class EGSWishlistUpdateCoordinator(DataUpdateCoordinator[list[dict[str, str]]]):
+    """Class to manage fetching wishlist product mappings from Epic Games Store."""
+
+    def __init__(self, hass: HomeAssistant, entry: EGSConfigEntry) -> None:
+        """Initialize."""
+        self._api = EpicGamesStoreAPI(
+            entry.data[CONF_LANGUAGE],
+            entry.data[CONF_COUNTRY],
+        )
+        self.language = entry.data[CONF_LANGUAGE]
+        self.country = entry.data[CONF_COUNTRY]
+        self.data = []
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN} wishlist",
+            update_interval=SCAN_INTERVAL,
+        )
+
+    @override
+    async def _async_update_data(self) -> list[dict[str, str]]:
+        """Fetch the product mapping from the library."""
+        catalog_data = await self.hass.async_add_executor_job(
+            self._api.get_product_mapping
+        )
+        self.data = [{"id": item, "title": catalog_data[item]} for item in catalog_data]
+        _LOGGER.debug(self.data)
+        return self.data

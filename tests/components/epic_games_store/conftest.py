@@ -11,6 +11,16 @@ from .const import (
 )
 
 
+@pytest.fixture(autouse=True)
+def mock_wishlist_service():
+    """Mock the wishlist product mapping API."""
+    with patch(
+        "homeassistant.components.epic_games_store.coordinator.EpicGamesStoreAPI.get_product_mapping",
+        return_value={},
+    ):
+        yield
+
+
 @pytest.fixture(name="service_multiple")
 def mock_service_multiple():
     """Mock a successful service with multiple free & discount games."""
